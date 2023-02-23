@@ -31,34 +31,15 @@ internal class Program
                 {
                     //body 0 代表距离前方最近的人
                     var body = pop_frame_result.GetBody(0);
-                    //右肩膀
-                    var shoulderRight_joint = body.Skeleton.GetJoint(JointId.ShoulderRight);
-                    //右肩膀在二维向量中的点
-                    var shoulderRight_dot = shoulderRight_joint.Position;
-                    //紧挨着右肩膀坐标的关节是右肘部
-                    var elbowRight_joint = body.Skeleton.GetJoint(JointId.ElbowRight);
-                    //右肘部在二维向量中的点
-                    var elbowRight_dot = elbowRight_joint.Position;
-                    //右手腕
-                    var wristRight_joint = body.Skeleton.GetJoint(JointId.WristRight);
-                    //右手腕在二维向量中的点
-                    var wristRight_dot = wristRight_joint.Position;
-                    var handRight_joint = body.Skeleton.GetJoint(JointId.HandRight);
-                    var spineChest_joint = body.Skeleton.GetJoint(JointId.SpineChest);
-                    //计算平面数点距
-                    //右臂
-                    var armRight = Vector3.Distance(shoulderRight_dot, elbowRight_dot);
-                    //右前臂
-                    var forearmRight = Vector3.Distance(elbowRight_dot, wristRight_dot);
-                    //右侧连线(只有连线才能是三角形)
-                    var lineRight = Vector3.Distance(wristRight_dot, shoulderRight_dot);
-                    var reg = MathF.Acos((armRight * armRight + forearmRight * forearmRight - lineRight * lineRight) / (2 * armRight * forearmRight));
-                    //将返回值乘以 180/ MathF.PI 从弧度转换为度。
-                    //Multiply the return value by 180/MathF.PI to convert from radians to degrees.
-                    Console.WriteLine("右手的位置:X:{0} Y:{1} Z:{2}", handRight_joint.Position.X, handRight_joint.Position.Y, handRight_joint.Position.Z);
-                    Console.WriteLine("脊柱胸部的位置:X:{0} Y:{1} Z:{2}", spineChest_joint.Position.X, spineChest_joint.Position.Y, spineChest_joint.Position.Z);
+                    //右肩膀在三维向量中的点
+                    var shoulderRight = body.Skeleton.GetJoint(JointId.ShoulderRight);
+                    //紧挨着右肩膀坐标的关节是右肘部  在三维向量中的点
+                    var elbowRight = body.Skeleton.GetJoint(JointId.ElbowRight);
+                    //右手腕 在三维向量中的点
+                    var wristRight = body.Skeleton.GetJoint(JointId.WristRight);
 
-                    Console.WriteLine("右肘关节与大臂之间的角度是{0}°", reg * (180/MathF.PI));
+                    Console.WriteLine("右肘关节与大臂之间的角度是{0}°", Angle(shoulderRight.Position, elbowRight.Position, wristRight.Position));
+
                 }
                 Thread.Sleep(100);
             } while (frame_count < 1000);
@@ -76,6 +57,19 @@ internal class Program
             if (k4a != null)
                 k4a.Dispose();
         }
+    }
+    private static float Angle(Vector3 start , Vector3 pass ,Vector3 end)
+    {
+        var line1 = Vector3.Distance(start, pass);
+        var line2 = Vector3.Distance(pass, end);
+        var refLine = Vector3.Distance(end, start);
+        return Triangle(line1 , line2 , refLine);
+    }
+
+    private static float Triangle(float line1, float line2, float refLine)
+    {
+        var reg = MathF.Acos((line1 * line1 + line2 * line2 - refLine * refLine) / (2 * line1 * line2));
+        return reg * (180 / MathF.PI);
     }
 }
 
